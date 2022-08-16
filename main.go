@@ -5,22 +5,12 @@ import (
 	"os"
 
 	"github.com/gdamore/tcell/v2"
-	"github.com/gdamore/tcell/v2/encoding"
-
-	"github.com/mattn/go-runewidth"
 )
 
 func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
 	for _, c := range str {
-		var comb []rune
-		w := runewidth.RuneWidth(c)
-		if w == 0 {
-			comb = []rune{c}
-			c = ' '
-			w = 1
-		}
-		s.SetContent(x, y, c, comb, style)
-		x += w
+		s.SetContent(x, y, c, nil, style)
+		x += 1
 	}
 }
 
@@ -29,14 +19,12 @@ func displayHelloWorld(s tcell.Screen) {
 	s.Clear()
 	style := tcell.StyleDefault.Foreground(tcell.ColorBlack.TrueColor()).Background(tcell.ColorWhite)
 	emitStr(s, w/2-7, h/2, style, "Hello, World!")
-	emitStr(s, w/2-9, h/2+1, tcell.StyleDefault, "Press ESC to exit.")
+	emitStr(s, w/2-9, h/2+1, tcell.StyleDefault, "Press Enter to exit.")
 	s.Show()
 }
 
 // This program just prints "Hello, World!".  Press ESC to exit.
 func main() {
-	encoding.Register()
-
 	s, e := tcell.NewScreen()
 	if e != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", e)
@@ -56,11 +44,8 @@ func main() {
 
 	for {
 		switch ev := s.PollEvent().(type) {
-		case *tcell.EventResize:
-			s.Sync()
-			displayHelloWorld(s)
 		case *tcell.EventKey:
-			if ev.Key() == tcell.KeyEscape {
+			if ev.Key() == tcell.KeyEnter {
 				s.Fini()
 				os.Exit(0)
 			}
