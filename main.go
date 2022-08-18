@@ -7,30 +7,49 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
+func PrintString(s tcell.Screen, col, row int, str string) {
 	for _, c := range str {
-		s.SetContent(x, y, c, nil, style)
-		x += 1
+		s.SetContent(col, row, c, nil, tcell.StyleDefault)
+		col += 1
 	}
 }
 
-func displayHelloWorld(s tcell.Screen) {
-	w, h := s.Size()
-	s.Clear()
-	style := tcell.StyleDefault.Foreground(tcell.ColorBlack.TrueColor()).Background(tcell.ColorWhite)
-	emitStr(s, w/2-7, h/2, style, "Hello, World!")
-	emitStr(s, w/2-9, h/2+1, tcell.StyleDefault, "Press Enter to exit.")
-	s.Show()
+func Print(s tcell.Screen, col, row, width, height int, ch rune) {
+	for r := 0; r < height; r++ {
+		for c := 0; c < width; c++ {
+			s.SetContent(col+c, row+r, ch, nil, tcell.StyleDefault)
+		}
+	}
+}
+
+func displayHelloWorld(screen tcell.Screen) {
+	screen.Clear()
+	//PrintString(s, 2, 2, tcell.StyleDefault, "Hello, World!")
+	Print(screen, 0, 0, 5, 5, '*')
+	screen.Show()
 }
 
 // This program just prints "Hello, World!".  Press ESC to exit.
 func main() {
-	s, e := tcell.NewScreen()
-	if e != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", e)
+	screen := InitScreen()
+	for {
+		switch ev := screen.PollEvent().(type) {
+		case *tcell.EventKey:
+			if ev.Key() == tcell.KeyEnter {
+				screen.Fini()
+				os.Exit(0)
+			}
+		}
+	}
+}
+
+func InitScreen() tcell.Screen {
+	screen, err := tcell.NewScreen()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
 	}
-	if e := s.Init(); e != nil {
+	if e := screen.Init(); e != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", e)
 		os.Exit(1)
 	}
@@ -38,17 +57,9 @@ func main() {
 	defStyle := tcell.StyleDefault.
 		Background(tcell.ColorBlack).
 		Foreground(tcell.ColorWhite)
-	s.SetStyle(defStyle)
+	screen.SetStyle(defStyle)
 
-	displayHelloWorld(s)
+	displayHelloWorld(screen)
 
-	for {
-		switch ev := s.PollEvent().(type) {
-		case *tcell.EventKey:
-			if ev.Key() == tcell.KeyEnter {
-				s.Fini()
-				os.Exit(0)
-			}
-		}
-	}
+	return screen
 }
