@@ -24,12 +24,11 @@ func Print(s tcell.Screen, col, row, width, height int, ch rune) {
 
 func displayHelloWorld(screen tcell.Screen) {
 	screen.Clear()
-	//PrintString(s, 2, 2, tcell.StyleDefault, "Hello, World!")
+	PrintString(screen, 5, 5, "Hello, World!")
 	Print(screen, 0, 0, 5, 5, '*')
 	screen.Show()
 }
 
-// This program just prints "Hello, World!".  Press ESC to exit.
 func main() {
 	screen := InitScreen()
 	for {
