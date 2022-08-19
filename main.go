@@ -7,6 +7,9 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
+const paddleHeight = 4
+const paddleSymbol = 0x2588
+
 func PrintString(s tcell.Screen, col, row int, str string) {
 	for _, c := range str {
 		s.SetContent(col, row, c, nil, tcell.StyleDefault)
@@ -14,7 +17,7 @@ func PrintString(s tcell.Screen, col, row int, str string) {
 	}
 }
 
-func Print(s tcell.Screen, col, row, width, height int, ch rune) {
+func Print(s tcell.Screen, row, col, width, height int, ch rune) {
 	for r := 0; r < height; r++ {
 		for c := 0; c < width; c++ {
 			s.SetContent(col+c, row+r, ch, nil, tcell.StyleDefault)
@@ -22,10 +25,12 @@ func Print(s tcell.Screen, col, row, width, height int, ch rune) {
 	}
 }
 
-func displayHelloWorld(screen tcell.Screen) {
+func displayPaddles(screen tcell.Screen) {
 	screen.Clear()
-	PrintString(screen, 5, 5, "Hello, World!")
-	Print(screen, 0, 0, 5, 5, '*')
+	width, height := screen.Size()
+	paddleStart := height/2 - paddleHeight/2
+	Print(screen, paddleStart, 0, 1, paddleHeight, paddleSymbol)
+	Print(screen, paddleStart, width-1, 1, paddleHeight, paddleSymbol)
 	screen.Show()
 }
 
@@ -34,7 +39,7 @@ func main() {
 	for {
 		switch ev := screen.PollEvent().(type) {
 		case *tcell.EventKey:
-			if ev.Key() == tcell.KeyEnter {
+			if ev.Key() == tcell.KeyESC {
 				screen.Fini()
 				os.Exit(0)
 			}
@@ -58,7 +63,7 @@ func InitScreen() tcell.Screen {
 		Foreground(tcell.ColorWhite)
 	screen.SetStyle(defStyle)
 
-	displayHelloWorld(screen)
+	displayPaddles(screen)
 
 	return screen
 }
