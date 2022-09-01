@@ -33,31 +33,32 @@ func Print(row, col, width, height int, ch rune) {
 	}
 }
 
-func displayPaddles() {
+func DrawState() {
 	screen.Clear()
-	width, height := screen.Size()
-	paddleStart := height/2 - paddleHeight/2
-	Print(paddleStart, 0, 1, paddleHeight, paddleSymbol)
-	Print(paddleStart, width-1, 1, paddleHeight, paddleSymbol)
+	Print(player1.row, player1.col, player1.width, player1.height, paddleSymbol)
+	Print(player2.row, player2.col, player2.width, player2.height, paddleSymbol)
 	screen.Show()
 }
 
 func main() {
 	InitScreen()
+	InitGameState()
+
 	for {
+		DrawState()
 		switch ev := screen.PollEvent().(type) {
 		case *tcell.EventKey:
-			if ev.Key() == tcell.KeyESC {
+			if ev.Rune() == 'q' {
 				screen.Fini()
 				os.Exit(0)
 			} else if ev.Key() == tcell.KeyUp {
-				player1.row++
-			} else if ev.Key() == tcell.KeyDown {
-				player1.row--
-			} else if ev.Rune() == 'w' {
-				player2.row++
-			} else if ev.Rune() == 's' {
 				player2.row--
+			} else if ev.Key() == tcell.KeyDown {
+				player2.row++
+			} else if ev.Rune() == 'w' {
+				player1.row--
+			} else if ev.Rune() == 's' {
+				player1.row++
 			}
 		}
 	}
