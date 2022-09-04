@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -43,25 +44,33 @@ func DrawState() {
 func main() {
 	InitScreen()
 	InitGameState()
+	inputChan := InituserInput()
 
 	for {
 		DrawState()
-		switch ev := screen.PollEvent().(type) {
-		case *tcell.EventKey:
-			if ev.Rune() == 'q' {
-				screen.Fini()
-				os.Exit(0)
-			} else if ev.Key() == tcell.KeyUp {
-				player2.row--
-			} else if ev.Key() == tcell.KeyDown {
-				player2.row++
-			} else if ev.Rune() == 'w' {
-				player1.row--
-			} else if ev.Rune() == 's' {
-				player1.row++
-			}
+		time.Sleep(50 * time.Millisecond)
+
+		key := <-inputChan
+		if key == "Rune[q]" {
+			screen.Fini()
+			os.Exit(0)
 		}
 	}
+	// switch ev := screen.PollEvent().(type) {
+	// case *tcell.EventKey:
+	// 	if ev.Rune() == 'q' {
+	// 		screen.Fini()
+	// 		os.Exit(0)
+	// 	} else if ev.Key() == tcell.KeyUp {
+	// 		player2.row--
+	// 	} else if ev.Key() == tcell.KeyDown {
+	// 		player2.row++
+	// 	} else if ev.Rune() == 'w' {
+	// 		player1.row--
+	// 	} else if ev.Rune() == 's' {
+	// 		player1.row++
+	// 	}
+	// }
 }
 
 func InitScreen() {
@@ -92,4 +101,16 @@ func InitGameState() {
 	player2 = &Paddle{
 		row: paddleStart, col: width - 1, width: 1, height: paddleHeight,
 	}
+}
+func InituserInput() chan string {
+	inputChan := make(chan string)
+	go func() {
+		for {
+			switch ev := screen.PollEvent().(type) {
+			case *tcell.EventKey:
+				inputChan <- ev.Name()
+			}
+		}
+	}()
+	return inputChan
 }
