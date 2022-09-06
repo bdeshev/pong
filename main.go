@@ -18,6 +18,7 @@ type Paddle struct {
 var screen tcell.Screen
 var player1 *Paddle
 var player2 *Paddle
+var debugLog string
 
 func PrintString(col, row int, str string) {
 	for _, c := range str {
@@ -36,6 +37,7 @@ func Print(row, col, width, height int, ch rune) {
 
 func DrawState() {
 	screen.Clear()
+	PrintString(0, 0, debugLog)
 	Print(player1.row, player1.col, player1.width, player1.height, paddleSymbol)
 	Print(player2.row, player2.col, player2.width, player2.height, paddleSymbol)
 	screen.Show()
@@ -45,17 +47,20 @@ func main() {
 	InitScreen()
 	InitGameState()
 	inputChan := InituserInput()
-
+	cnt := 0
 	for {
 		DrawState()
 		time.Sleep(50 * time.Millisecond)
 
-		key := <-inputChan
+		key := ReadInput(inputChan)
 		if key == "Rune[q]" {
 			screen.Fini()
 			os.Exit(0)
 		}
+		cnt++
+		debugLog = fmt.Sprintf("%d", cnt)
 	}
+
 	// switch ev := screen.PollEvent().(type) {
 	// case *tcell.EventKey:
 	// 	if ev.Rune() == 'q' {
@@ -113,4 +118,14 @@ func InituserInput() chan string {
 		}
 	}()
 	return inputChan
+}
+
+func ReadInput(inputChan chan string) string {
+	var key string
+	select {
+	case key = <-inputChan:
+	default:
+		key = ""
+	}
+	return key
 }
