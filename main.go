@@ -9,29 +9,37 @@ import (
 )
 
 const PaddleHeight = 4
-const PaddleSymbol = 0x2588
+const InitialBallVelocityRow = 1
+const InitialBallVelocityCol = 1
 
-type Paddle struct {
-	row, column, width, height int
+const PaddleSymbol = 0x2588
+const BallSymbol = 0x25Cf
+
+type GameObject struct {
+	row, col, width, height int
+	velRow, velCol          int
+	symbol                  rune
 }
 
 var screen tcell.Screen
-var player1 *Paddle
-var player2 *Paddle
+var player1Paddle *GameObject
+var player2Paddle *GameObject
+var ball *GameObject
 var debugLog string
+
+var gameObjects []*GameObject
 
 func main() {
 	InitScreen()
-	GameState()
-	inputChannel := UserInput()
+	InitGameState()
+	inputChan := UserInput()
 
 	for {
+		key := ReadInput(inputChan)
 		DrawState()
-		time.Sleep(50 * time.Millisecond)
-
-		key := ReadInput(inputChannel)
+		UpdateState()
 		HandleUserInput(key)
-
+		time.Sleep(50 * time.Millisecond)
 	}
 
 }
@@ -50,11 +58,19 @@ func Print(row, column, width, height int, ch rune) {
 	}
 }
 
+func UpdateState() {
+	for i := range gameObjects {
+		gameObjects[i].row += gameObjects[i].velRow
+		gameObjects[i].col += gameObjects[i].velCol
+	}
+}
+
 func DrawState() {
 	screen.Clear()
 	PrintString(0, 0, debugLog)
-	Print(player1.row, player1.column, player1.width, player1.height, PaddleSymbol)
-	Print(player2.row, player2.column, player2.width, player2.height, PaddleSymbol)
+	for _, obj := range gameObjects {
+		Print(obj.row, obj.col, obj.width, obj.height, obj.symbol)
+	}
 	screen.Show()
 
 }
@@ -82,14 +98,14 @@ func HandleUserInput(key string) {
 	if key == "Rune[q]" {
 		screen.Fini()
 		os.Exit(0)
-	} else if key == "Rune[w]" && player1.row > 0 {
-		player1.row--
-	} else if key == "Rune[s]" && player1.row+player1.height < screenHeight {
-		player1.row++
-	} else if key == "Up" && player2.row > 0 {
-		player2.row--
-	} else if key == "Down" && player2.row+player2.height < screenHeight {
-		player2.row++
+	} else if key == "Rune[w]" && player1Paddle.row > 0 {
+		player1Paddle.row--
+	} else if key == "Rune[s]" && player1Paddle.row+player1Paddle.height < screenHeight {
+		player1Paddle.row++
+	} else if key == "Up" && player2Paddle.row > 0 {
+		player2Paddle.row--
+	} else if key == "Down" && player2Paddle.row+player2Paddle.height < screenHeight {
+		player2Paddle.row++
 	}
 }
 
@@ -106,15 +122,27 @@ func UserInput() chan string {
 	return inputChannel
 }
 
-func GameState() {
+func InitGameState() {
 	width, height := screen.Size()
 	paddleStart := height/2 - PaddleHeight/2
 
-	player1 = &Paddle{
-		row: paddleStart, column: 0, width: 1, height: PaddleHeight,
+	player1Paddle = &GameObject{
+		row: paddleStart, col: 0, width: 1, height: PaddleHeight,
+		velRow: 0, velCol: 0,
+		symbol: PaddleSymbol,
 	}
-	player2 = &Paddle{
-		row: paddleStart, column: width - 1, width: 1, height: PaddleHeight,
+	player2Paddle = &GameObject{
+		row: paddleStart, col: width - 1, width: 1, height: PaddleHeight,
+		velRow: 0, velCol: 0,
+		symbol: PaddleSymbol,
+	}
+	ball = &GameObject{
+		row: height / 2, col: width / 2, width: 1, height: 1,
+		velRow: InitialBallVelocityRow, velCol: InitialBallVelocityCol,
+		symbol: BallSymbol,
+	}
+	gameObjects = []*GameObject{
+		player1Paddle, player2Paddle, ball,
 	}
 }
 
