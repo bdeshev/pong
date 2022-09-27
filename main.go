@@ -10,7 +10,7 @@ import (
 
 const PaddleHeight = 4
 const InitialBallVelocityRow = 1
-const InitialBallVelocityCol = 1
+const InitialBallVelocityCol = 2
 
 const PaddleSymbol = 0x2588
 const BallSymbol = 0x25Cf
@@ -39,7 +39,7 @@ func main() {
 		DrawState()
 		UpdateState()
 		HandleUserInput(key)
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(75 * time.Millisecond)
 	}
 
 }
@@ -63,6 +63,10 @@ func UpdateState() {
 		gameObjects[i].row += gameObjects[i].velRow
 		gameObjects[i].col += gameObjects[i].velCol
 	}
+
+	if ClollidesWithWall(ball) {
+		ball.velRow = -ball.velRow
+	}
 }
 
 func DrawState() {
@@ -72,6 +76,12 @@ func DrawState() {
 		Print(obj.row, obj.col, obj.width, obj.height, obj.symbol)
 	}
 	screen.Show()
+
+}
+
+func ClollidesWithWall(obj *GameObject) bool {
+	_, screenHeight := screen.Size()
+	return !(obj.row+obj.velRow >= 0 && obj.row+obj.velRow < screenHeight)
 
 }
 
